@@ -1,0 +1,19 @@
+
+<mat-accordion>
+ <app-info-card-panel
+   *ngFor="let cardInfo of cardsInfo; let i = index"
+   [index]="i"
+   [step]="step"
+   [card]="cardInfo"
+   [last]="isCardLastInList(i)"
+   (stepChanged)="stepEvent($event)"
+ >
+   <div class="tree-container" *ngIf="!!cardInfo.content">
+     <app-tree [dataObject]="cardInfo.content"></app-tree>
+     <!--mat-list-item *ngFor="let keyValue of cardInfo.content">
+       <h4>- {{keyValue.key}}: {{keyValue.value}}</h4>
+     </mat-list-item-->
+   </div>
+   <img class="" *ngIf="!!cardInfo.src" [src]="cardInfo.src">
+ </app-info-card-panel>
+</mat-accordion>

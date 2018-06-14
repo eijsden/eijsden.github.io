@@ -1,0 +1,55 @@
+@import "../../theme";
+
+.container {
+
+  height: 100vh;
+  width: 100vw;
+  overflow-y: visible;
+}
+.mat-drawer-shown > .content {
+  padding-left: 15px;
+}
+
+.nav {
+  position: absolute;
+  z-index: 10;
+  width: 320px;
+  background-color: white;
+  //-webkit-transform: translateX(0);
+  //transform: translateX(0);
+  //transition-property: -webkit-transform;
+  //transition-property: transform;
+  box-shadow: 0 -1px 24px rgba(0,0,0,0.4);
+  padding-top: 76px;
+}
+
+.nav-item {
+  width: 100%;
+  //padding-left: 15px;
+  border-left: 15px solid mat-color($primary);
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  background: white;
+
+  padding-top: 76px;
+}
+
+.sidenav-button {
+  position: fixed !important;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+}
+
+.sidenav-button:hover {
+  background: mat-color($accent);
+}
+
+mat-list-item:hover {
+  background: mat-color($accent);
+  color:white;
+
+}

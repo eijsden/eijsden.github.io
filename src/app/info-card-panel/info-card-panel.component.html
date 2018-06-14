@@ -1,0 +1,16 @@
+<mat-expansion-panel class="card-width" [expanded]="step === index" (opened)="setStep(index)" hideToggle="true">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      <h3>{{card.title}}</h3>
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+  <ng-content></ng-content>
+  <mat-action-row *ngIf="card.actions">
+    <button mat-button color="primary" *ngIf="!isFirst()" (click)="prevStep()">Previous</button>
+    <button mat-button color="primary" *ngIf="!isLast(); else close" (click)="nextStep()">Next</button>
+    <ng-template #close>
+      <button mat-button color="primary" (click)="nextStep()">Close</button>
+    </ng-template>
+  </mat-action-row>
+</mat-expansion-panel>
+

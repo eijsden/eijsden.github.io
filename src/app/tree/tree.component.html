@@ -1,0 +1,25 @@
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+
+  /* Children */
+  <mat-tree-node class="child" *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding [matTreeNodePaddingIndent]="20">
+    <button mat-icon-button >
+      <mat-icon class="mat-icon-rtl-mirror">
+      {{'chevron_right'}}
+    </mat-icon></button>
+    <span class="key-child">{{node.filename}}</span> : {{node.type}}
+  </mat-tree-node>
+
+
+
+
+  /* Parent */
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodeToggle matTreeNodePadding [matTreeNodePaddingIndent]="20">
+    <button mat-icon-button matTreeNodeToggle
+            [attr.aria-label]="'toggle ' + node.filename">
+      <mat-icon class="mat-icon-rtl-mirror">
+        {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+      </mat-icon>
+    </button>
+    <span class="key-parent">{{node.filename}}</span> : {{node.type}}
+  </mat-tree-node>
+</mat-tree>

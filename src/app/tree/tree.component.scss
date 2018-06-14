@@ -1,0 +1,25 @@
+@import "../../theme";
+:host /deep/ mat-tree-node.mat-tree-node {
+  min-height: 30px !important;
+  height: 30px;
+}
+.key-child {
+  font-weight: bold;
+  color: mat-color($accent)
+}
+
+.key-parent {
+  font-weight: bold;
+  color: mat-color($primary)
+}
+
+@media only screen and (min-width: 768px) {
+  :host /deep/ mat-tree-node:hover:not(.child) {
+    cursor: pointer;
+    background: mat-color($primary) !important;
+  }
+
+  :host /deep/ mat-tree-node:hover:not(.child) * {
+    color: white !important;
+  }
+}

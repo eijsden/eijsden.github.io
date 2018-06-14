@@ -1,0 +1,40 @@
+.container {
+  height: auto;
+}
+
+@media only screen and (min-width: 768px) {
+  .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+.column {
+  margin: 0 20px 20px 20px;
+}
+
+:host /deep/ img {
+  max-width:100%;
+}
+
+
+.div {
+  margin: 0;
+}
+
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%
+}
+
