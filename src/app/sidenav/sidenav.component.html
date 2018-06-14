@@ -1,14 +1,21 @@
-<button mat-fab color="primary" [@opened]="sidenav.opened" class="sidenav-button" (click)="toggleSidenav()"><mat-icon>{{buttonIcon}}</mat-icon></button>
-<mat-drawer-container class="container">
-  <mat-drawer class="nav" #sidenav mode="push">
+<button #sidenavBtn mat-fab color="primary" class="sidenav-button"  (click)="toggleSidenav()" [disableRipple]="true"><mat-icon>{{buttonIcon}}</mat-icon></button>
+<mat-drawer-container class="container" hasBackdrop="false">
+  <mat-drawer class="nav" #sidenav mode="over" [autoFocus]="false" (closedStart)="toggleSidenav(false)" (openedStart)="toggleSidenav(true)">
     <mat-divider></mat-divider>
-    <mat-list style="padding:0;">
-      <mat-list-item class="nav-item" routerLink="/">Home</mat-list-item>
-      <mat-list-item class="nav-item" routerLink="/about">About</mat-list-item>
-    </mat-list>
+    <div #menuBtns class="flex-box">
+      <div class="menu-button-container noselect" *ngFor="let menuItem of menuButtonItems"  routerLink="{{menuItem.link}}" (click)="setActive($event)">
+        <button mat-icon-button class="menu-button-item noselect" disableRipple="true">
+          <mat-icon class="menu-buttin-item-icon">{{menuItem.icon}}</mat-icon>
+        </button>
+      </div>
+    </div>
   </mat-drawer>
-  <mat-drawer-content class="content" (scroll)="scrollHandler($event)">
-    <router-outlet></router-outlet>
+  <mat-drawer-content id="content">
+    <div class="content" >
+      <router-outlet></router-outlet>
+    </div>
   </mat-drawer-content>
 </mat-drawer-container>
+
+
 

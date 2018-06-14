@@ -1,5 +1,8 @@
-import {Component, OnDestroy, OnInit, ViewChild, Input, HostListener} from '@angular/core';
-import {MatDrawer, MatDrawerContainer, MatSidenav} from '@angular/material';
+import {Component, OnDestroy, OnInit, ViewChild, Input, HostListener, ElementRef, AfterViewInit} from '@angular/core';
+import {
+  MatButton,
+  MatDrawer
+} from '@angular/material';
 import {LayoutService} from '../layout.service';
 import {Subject} from 'rxjs/index';
 
@@ -10,73 +13,77 @@ import {
   animate,
   transition
 } from '@angular/animations';
+import {ActivatedRoute, Router} from "@angular/router";
 
 @Component({
   selector: 'app-sidenav',
   templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss'],
-  animations: [
-    trigger('opened', [
-      state('true', style({
-        'padding-left': '15px;',
-      })),
-      state('false',   style({
-        'padding-left': '86px;'
-      })),
-      transition('true => false', animate('100ms ease-in')),
-      transition('false => true', animate('100ms ease-out'))
-    ])
-  ]
+  styleUrls: ['./sidenav.component.scss']
 })
-export class SidenavComponent implements OnInit, OnDestroy {
+export class SidenavComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('sidenav') sidenav: MatDrawer;
+  @ViewChild('sidenavBtn') sidenavBtn: MatButton;
+  @ViewChild('menuBtns') menuBtns: ElementRef;
+
+  menuButtonItems = [
+    {link: "/", icon: 'home'},
+    {link: "/about", icon: 'person'}
+  ]
 
   private ngUnsubscribe: Subject<boolean> = new Subject();
   private closeIcon = 'close';
   private menuIcon = 'menu';
-  opened;
   buttonIcon = this.menuIcon;
 
-  constructor(private _layout: LayoutService) { }
+  constructor(private _layout: LayoutService, private router: Router) { }
 
   ngOnInit() {
-    this.layoutListener();
-    this.opened = this.sidenav.opened + "";
+    this.initListener();
   }
-
-  private toggleButtonIcon(){
-    this.buttonIcon = this.sidenav.opened ? this.closeIcon : this.menuIcon;
-  }
-
   ngOnDestroy(): void {
     this.ngUnsubscribe.next(true);
     this.ngUnsubscribe.complete();
   }
 
-  private toggleSidenav(){
-    this.sidenav.toggle();
-    this.toggleButtonIcon();
-    this.opened = this.sidenav.opened + "";
+  private toggleButtonIcon(open){
+    this.buttonIcon = this.sidenav.opened ? this.closeIcon : this.menuIcon;
   }
 
-  layoutListener() {
+  toggleSidenav(open?){
+    if(open == null){
+      open = !this.sidenav.opened;
+    }
+    if(open){
+      this.sidenav.open();
+      this.sidenavBtn._elementRef.nativeElement.classList.add("sidenav-open");
+    } else {
+      this.sidenav.close();
+      this.sidenavBtn._elementRef.nativeElement.classList.remove("sidenav-open");
+    }
+    this.toggleButtonIcon(this.sidenav.opened);
+  }
+
+  initListener() {
     this._layout.sidenav
-      .subscribe(
-        open => {
-          if(open == null) {
-            this.sidenav.toggle();
-            return;
-          }
-          this.sidenav.opened = open;
+      .subscribe(opened => this.toggleSidenav())
+  }
+
+  setActive(event){
+    for(let child of event.currentTarget.parentNode.children) {
+      child.classList.remove("active");
+    }
+    event.currentTarget.classList.add("active");
+  }
+
+  ngAfterViewInit(): void {
+    this.menuButtonItems.map(
+      (child, index) => {
+        if(child.link == window.location.pathname){
+          this.menuBtns.nativeElement.children[index].classList.add("active");
         }
-      );
+      });
+
+
   }
-
-
-  @HostListener('window:scroll', [])
-  scrollHandler(event) {
-    console.log("Scroll Event", event);
-  }
-
 
 }

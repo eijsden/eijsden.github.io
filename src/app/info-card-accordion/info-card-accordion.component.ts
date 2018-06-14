@@ -15,7 +15,6 @@ export class InfoCardAccordionComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    console.log(this.cardsInfo);
   }
 
   stepEvent(newValue){

@@ -10,11 +10,13 @@
   padding-left: 15px;
 }
 
+$navWidth: 80px;
+
 .nav {
   position: absolute;
   z-index: 10;
-  width: 320px;
-  background-color: white;
+  width: $navWidth;
+  background-color: mat-color($primary);
   //-webkit-transform: translateX(0);
   //transform: translateX(0);
   //transition-property: -webkit-transform;
@@ -29,12 +31,35 @@
   border-left: 15px solid mat-color($primary);
 }
 
+.menu-buttin-item-icon {
+  color : white;
+  cursor: pointer;
+}
+
+@media only screen and (min-width: 768px) {
+
+
+  .menu-button-container:hover {
+    background: mat-color($accent);
+  }
+
+  .menu-button-item:hover + menu-button-item-icon {
+    color: mat-color($accent) !important;
+  }
+
+  button.sidenav-button.sidenav-open ~ mat-drawer-container div.content {
+    padding-left: $navWidth;
+    width: calc(100vw - 20px - #{$navWidth});
+    transition-property: padding-left, width;
+  }
+}
+
 .content {
   width: 100%;
   height: 100%;
   background: white;
-
   padding-top: 76px;
+  transition-duration: 0.4s;
 }
 
 .sidenav-button {
@@ -42,14 +67,44 @@
   top: 10px;
   left: 10px;
   z-index: 100;
+
 }
 
-.sidenav-button:hover {
+.menu-button-item {
+  margin-top: 20px;
+  cursor: pointer !important;
+}
+
+.menu-button-container {
+  width: $navWidth;
+  height: $navWidth;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+
+.active {
+  background: mat-color($accent);
+  box-shadow: 20px 0 mat-color($accent);
+}
+
+/deep/ .menu-button-item.mat-ripple {
+  max-width: 0px; /* Or whatever value you wish */
+  /* In some situations !important seems necessary */
+}
+
+.sidenav-button.sidenav-open {
   background: mat-color($accent);
 }
 
-mat-list-item:hover {
-  background: mat-color($accent);
-  color:white;
-
-}

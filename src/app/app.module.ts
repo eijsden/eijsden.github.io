@@ -9,10 +9,10 @@ import {
   MatToolbarModule, MatTreeModule
 } from '@angular/material';
 
-import { AboutComponent } from './about/about.component';
+import { AboutComponent } from './views/about/about.component';
 import {HttpClientModule} from '@angular/common/http';
 import {RouterModule, Routes} from '@angular/router';
-import { HomeComponent } from './home/home.component';
+import { HomeComponent } from './views/home/home.component';
 import { InfoCardComponent } from './info-card/info-card.component';
 import { InfoCardPanelComponent } from './info-card-panel/info-card-panel.component';
 import { InfoCardAccordionComponent } from './info-card-accordion/info-card-accordion.component';
