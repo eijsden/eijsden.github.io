@@ -5,6 +5,7 @@ import {
 } from '@angular/material';
 import {LayoutService} from '../layout.service';
 import {Subject} from 'rxjs/index';
+import {takeUntil} from "rxjs/operators";
 
 import {
   trigger,
@@ -27,7 +28,8 @@ export class SidenavComponent implements OnInit, OnDestroy, AfterViewInit {
 
   menuButtonItems = [
     {link: "/", icon: 'home'},
-    {link: "/about", icon: 'person'}
+    {link: "/about", icon: 'person'},
+    {link: "/box-and-weave", icon: 'play_arrow'}
   ]
 
   private ngUnsubscribe: Subject<boolean> = new Subject();
@@ -65,6 +67,7 @@ export class SidenavComponent implements OnInit, OnDestroy, AfterViewInit {
 
   initListener() {
     this._layout.sidenav
+      .pipe(takeUntil<any>(this.ngUnsubscribe))
       .subscribe(opened => this.toggleSidenav())
   }
 
@@ -82,8 +85,6 @@ export class SidenavComponent implements OnInit, OnDestroy, AfterViewInit {
           this.menuBtns.nativeElement.children[index].classList.add("active");
         }
       });
-
-
   }
 
 }

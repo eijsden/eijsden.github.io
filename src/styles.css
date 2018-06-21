@@ -11,3 +11,7 @@
 .vertical-spacer {
   flex: 1;
 }
+
+.padding-top {
+  padding-top: 76px;
+}
