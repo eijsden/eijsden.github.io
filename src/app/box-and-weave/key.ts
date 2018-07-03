@@ -9,14 +9,13 @@ export class Key {
     this.code = keyCode;
   }
 
-
   downHandler = event => {
     if (event.keyCode === this.code) {
       if (this.isUp && this.press) this.press();
       this.isDown = true;
       this.isUp = false;
     }
-    event.preventDefault();
+    //event.preventDefault();
   };
   upHandler = event => {
     if (event.keyCode === this.code) {
