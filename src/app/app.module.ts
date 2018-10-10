@@ -17,6 +17,8 @@ import { InfoCardComponent } from './info-card/info-card.component';
 import { InfoCardPanelComponent } from './info-card-panel/info-card-panel.component';
 import { InfoCardAccordionComponent } from './info-card-accordion/info-card-accordion.component';
 import { TreeComponent } from './tree/tree.component';
+import {BoxAndWeaveModule} from "./box-and-weave/box-and-weave.module";
+import { AstroidsEvolvedModule } from './astroids-evolved/astroids-evolved.module';
 
 const routes: Routes = [
   {
@@ -38,7 +40,7 @@ const routes: Routes = [
     InfoCardComponent,
     InfoCardPanelComponent,
     InfoCardAccordionComponent,
-    TreeComponent,
+    TreeComponent
 
   ],
   imports: [
@@ -55,7 +57,10 @@ const routes: Routes = [
     MatExpansionModule,
     MatInputModule,
     MatTreeModule,
+    BoxAndWeaveModule,
+    AstroidsEvolvedModule,
     RouterModule.forRoot(routes),
+
 
   ],
   exports: [],

@@ -1,0 +1,22 @@
+
+.spinner {
+
+}
+
+div.spinner-wrapper {
+  display: flex;
+  margin: 0 auto;
+}
+
+.center {
+  display :flex;
+  justify-content: center;
+  justify-items: center;
+  flex-direction: column;
+}
+
+/deep/ canvas {
+  display: flex;
+  margin: 0 auto;
+  border: 2px solid #eee !important;
+}

@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build && node server/server.js",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -22,8 +22,13 @@
     "@angular/platform-browser": "^6.0.3",
     "@angular/platform-browser-dynamic": "^6.0.3",
     "@angular/router": "^6.0.3",
+    "body-parser": "^1.18.3",
     "core-js": "^2.5.4",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
     "hammerjs": "^2.0.8",
+    "intersects": "^2.1.0",
+    "pixi.js": "^4.8.1",
     "rxjs": "^6.0.0",
     "zone.js": "^0.8.26"
   },
