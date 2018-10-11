@@ -20,7 +20,7 @@ export class AstroidsEvolvedComponent implements OnInit {
   keyObject = new Keyboard();
   @ViewChild("container") container: ElementRef;
   viewLoading = true;
-  score = 100;
+  score = 0;
   highscore = 0;
   difficultyModifier = 1;
   scoreText: PIXI.Text;
@@ -48,6 +48,7 @@ export class AstroidsEvolvedComponent implements OnInit {
     this.animateBullets();
     this.scoreText = this.createScoreText();
     setTimeout(()=>{this.spawnAsteroid()}, this.baseSpawnTime);
+    this.updateScore(300)
   }
 
   initApp(){
@@ -114,14 +115,14 @@ export class AstroidsEvolvedComponent implements OnInit {
     });
 
     this.asteroids.forEach(asteroid => {
-      const newSpeed = this.difficultyModifier^5;
-      asteroid.x += Math.cos(asteroid.rotation)*(asteroid.velocity+newSpeed);
-      asteroid.y += Math.sin(asteroid.rotation)*(asteroid.velocity+newSpeed);
+      const newSpeed = this.difficultyModifier * (this.difficultyModifier/2);
+      asteroid.x += Math.cos(asteroid.rotation)*(asteroid.velocity) + newSpeed;
+      asteroid.y += Math.sin(asteroid.rotation)*(asteroid.velocity) + newSpeed;
       this.bullets.forEach(bullet => {
         if(this.checkForCircleCollision(bullet, asteroid)){
+          this.score += Math.floor(asteroid.radius/10);
           this.removeObjectFromStage(asteroid, this.asteroids);
           this.removeObjectFromStage(bullet, this.bullets);
-          this.score++;
           this.asteroidsDestroyed++;
           return;
         }
@@ -186,7 +187,9 @@ export class AstroidsEvolvedComponent implements OnInit {
     this.resetScore();
   }
 
-  updateScore(){
+  updateScore(score?){
+    if(!!score) this.score = score;
+
     this.scoreText.text = "Score: " + this.score;
     this.difficultyModifier = 1 + this.score/100;
     this.spawnTime = this.baseSpawnTime/(this.difficultyModifier)
@@ -343,7 +346,7 @@ export class AstroidsEvolvedComponent implements OnInit {
   private asteroidSpeed = 1;
   private asteroidVariation = 5;
   createAsteroid(x, y, lineStyle=0xFF8E00){
-    const radius = 35;
+    const radius = 35 * (Math.random() + 0.3);
     const asteroid = new PIXI.Graphics();
     asteroid.lineStyle(2, lineStyle, 1);
     asteroid.beginFill(0xff0f22, 0);
@@ -368,23 +371,23 @@ export class AstroidsEvolvedComponent implements OnInit {
     const asteroid = this.createAsteroid(this.app.screen.width/2, this.app.screen.height/2);
     this.app.stage.addChild(asteroid);
     this.asteroids.push(asteroid);
-    //console.log(this.spawnTime, this.difficultyModifier);
+    console.log(this.spawnTime, this.difficultyModifier);
     //setTimeout(()=>this.removeObjectFromStage(asteroid, this.asteroids), 15500);
     setTimeout(()=>this.spawnAsteroid(), this.spawnTime);
   }
 
   getAsteroidX(vx, vy){
     if(vy > 0){
-      return Math.random() * this.app.screen.width - 200;
+      return Math.random() * this.app.screen.width;
     } else {
-      return (vx > 0 ? -50 +200 : this.app.screen.width + 50 - 200);
+      return (vx > 0 ? -50 : this.app.screen.width + 50);
     }
   }
   getAsteroidY(vy, vx){
     if(vy > 0){
-      return (vx > 0 ? -50 + 200 : this.app.screen.height + 50 - 200);
+      return (vx > 0 ? -50 : this.app.screen.height + 50);
     } else {
-      return Math.random() * this.app.screen.height -200;
+      return Math.random() * this.app.screen.height;
     }
   }
 
@@ -530,7 +533,7 @@ export class AstroidsEvolvedComponent implements OnInit {
     };
 
     this.space.press = () => {
-      if(!this.player.isBombAvailable) return;
+      if(!this.player.isBombAvailable || !this.player.isAlive) return;
       this.player.isBombAvailable = false;
       this.player.isBombActive = true;
     }

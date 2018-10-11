@@ -7,7 +7,7 @@ import {MatProgressSpinnerModule} from '@angular/material';
 
 const routes: Routes = [
   {
-    path: 'astroids',
+    path: 'asteroids',
     component: AstroidsEvolvedComponent
   }
 ];

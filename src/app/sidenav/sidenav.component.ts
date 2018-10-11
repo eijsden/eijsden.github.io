@@ -29,7 +29,8 @@ export class SidenavComponent implements OnInit, OnDestroy, AfterViewInit {
   menuButtonItems = [
     {link: "/", icon: 'home'},
     {link: "/about", icon: 'person'},
-    {link: "/box-and-weave", icon: 'play_arrow'}
+    //{link: "/box-and-weave", icon: 'play_arrow'}
+    {link: "/asteroids", icon: 'play_arrow'}
   ]
 
   private ngUnsubscribe: Subject<boolean> = new Subject();
