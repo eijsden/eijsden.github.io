@@ -48,7 +48,7 @@ export class AstroidsEvolvedComponent implements OnInit {
     this.animateBullets();
     this.scoreText = this.createScoreText();
     setTimeout(()=>{this.spawnAsteroid()}, this.baseSpawnTime);
-    this.updateScore(300)
+    //this.updateScore(300)
   }
 
   initApp(){
