@@ -1,7 +1,10 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import * as PIXI from 'pixi.js/dist/pixi.js';
 import * as Intersects from 'intersects';
-import {Keyboard} from "./keyboard";
+import {Keyboard} from "./player/keyboard";
+import {Player} from './player/player';
+import {Bullet} from './player/bullet';
+import {Bomb} from './player/bomb';
 
 declare var PIXI;
 
@@ -15,10 +18,10 @@ export class AstroidsEvolvedComponent implements OnInit {
 
 
   private STATE = this.play;
+  playerId: string = "Jimmie";
+  players: Map<String, Player> = new Map();
   app: PIXI.Application;
-  player: PIXI.Sprite;
-  keyObject = new Keyboard();
-  @ViewChild("container") container: ElementRef;
+  @ViewChild('container') container: ElementRef;
   viewLoading = true;
   score = 0;
   highscore = 0;
@@ -26,29 +29,28 @@ export class AstroidsEvolvedComponent implements OnInit {
   scoreText: PIXI.Text;
   highscoreText: PIXI.Text;
   asteroidsDestroyed = 0;
-  left = this.keyObject.newKeyEvent(65);
-  up = this.keyObject.newKeyEvent(87);
-  right = this.keyObject.newKeyEvent(68);
-  down = this.keyObject.newKeyEvent(83);
-  space = this.keyObject.newKeyEvent(32);
   baseSpawnTime = 250;
   spawnTime = 2000;
-  movementVelocity = 15;
-  maxVelocity = 12.5;
-  minVelocity = 0;
-  acceleration = 0.5;
+  private movementVelocity = 15;
+  private maxVelocity = 12.5;
+  private minVelocity = 0;
+  private acceleration = 0.5;
+  private isHost: boolean = true;
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
     this.initApp();
-    this.createPlayer();
-    this.initKeyboardListeners();
-    this.viewLoading = false;
-    this.animateBullets();
+    this.app.stage.interactive = true;
+    this.initPlayers();
+    this.initAnimations();
     this.scoreText = this.createScoreText();
-    setTimeout(()=>{this.spawnAsteroid()}, this.baseSpawnTime);
-    //this.updateScore(300)
+    this.app.ticker.add(delta => this.gameLoop(delta));
+    this.viewLoading = false;
+    if(this.isHost) {
+      setTimeout(()=>{this.spawnAsteroid()}, this.baseSpawnTime);
+    }
   }
 
   initApp(){
@@ -64,29 +66,29 @@ export class AstroidsEvolvedComponent implements OnInit {
     });
   }
 
+  initPlayers(){
+    const player = new Player(this.playerId, this.movementVelocity, this.acceleration, true);
+    const spawn = {
+      x: this.app.screen.width/2,
+      y: this.app.screen.height/2
+    };
+    this.addToScene(player.createPlayerGraphic(spawn));
+    this.addToScene(player.bomb);
+    this.players.set(player.id, player);
+  }
+
+  addToScene(object){
+    this.app.stage.addChild(object);
+  }
+
+  getPlayer(){
+    return this.players.get(this.playerId);
+  }
+
   gameLoop(delta) {
     this.STATE(delta);
   }
 
-  animateBullet(bullet, change){
-    bullet.clear();
-    bullet.radius = 5 * change;
-    bullet.lineStyle(change);
-    bullet.beginFill(0xFF000C, 1);
-    bullet.drawCircle(0, 0, bullet.radius);
-    bullet.endFill();
-  }
-
-  animateBullets(){
-    this.app.ticker.add(delta => {
-     this.bullets.forEach(
-       bullet => {
-         bullet.count += 0.004;
-         const change = 1*(Math.sin(bullet.count*100) + 2);
-         this.animateBullet(bullet, change);
-       });
-    });
-  }
 
   removeObjectFromStage(object, array){
     object.clear();
@@ -94,20 +96,38 @@ export class AstroidsEvolvedComponent implements OnInit {
     array.splice(array.indexOf(object), 1);
   }
 
-
+  initAnimations(){
+    let count = 0;
+    this.app.ticker.add(delta => {
+      count += 0.2;
+      this.players.forEach(
+        player => {
+          player.animatePlayer(count);
+        });
+    });
+    this.bullets.forEach(
+      bullet => {
+        bullet.count += 0.004;
+        const change = 1*(Math.sin(bullet.count*100) + 2);
+        Bullet.animateBullet(bullet, change);
+      })
+  }
 
   play(state?) {
     const pos = this.app.renderer.plugins.interaction.mouse.global;
+    this.getPlayer().rotation = this.rotateToPoint(pos.x, pos.y, this.getPlayer().x, this.getPlayer().y);
 
-    this.player.rotation = this.rotateToPoint(pos.x, pos.y, this.player.x, this.player.y);
+    this.players.forEach(
+      player => {
+        if(!!player.isBombActive){
+          this.redrawBomb(player);
+        }
+      });
 
-    if(!!this.player.isBombActive){
-      this.redrawBomb();
-    }
 
     this.bullets.forEach(bullet => {
-      bullet.x += Math.cos(bullet.rotation)*this.bulletSpeed;
-      bullet.y += Math.sin(bullet.rotation)*this.bulletSpeed;
+      bullet.x += Math.cos(bullet.rotation)*bullet.velocity;
+      bullet.y += Math.sin(bullet.rotation)*bullet.velocity;
       if(!this.isInBounds(bullet, bullet.radius)){
         this.removeObjectFromStage(bullet, this.bullets);
         return;
@@ -127,49 +147,57 @@ export class AstroidsEvolvedComponent implements OnInit {
           return;
         }
       });
-      if(this.player.isBombActive && this.checkForCircleCollision(this.player.bomb, asteroid)){
-        this.removeObjectFromStage(asteroid, this.asteroids);
-        this.score++;
-        this.asteroidsDestroyed++;
-        return;
-      }
-      if(this.player.isAlive && this.checkForCollision(this.player, asteroid)){
-        //this.app.stage.removeChild(this.player);
-        this.onPlayerDeath();
-      }
-      if(!this.isInBounds(asteroid, asteroid.radius)){
-        //this.removeObjectFromStage(asteroid, this.asteroids);
-      }
+      this.players.forEach(
+        player => {
+          if(player.isBombActive && this.checkForCircleCollision(player.bomb, asteroid)){
+            this.removeObjectFromStage(asteroid, this.asteroids);
+            this.score++;
+            this.asteroidsDestroyed++;
+            return;
+          }
+          if(player.isAlive && this.checkForCollision(player, asteroid)){
+            //this.app.stage.removeChild(this.player);
+            this.onPlayerDeath(player);
+          }
+        });
     });
 
-    if(this.isInBoundsX(this.player)){
-      this.player.x += this.player.vx;
-      if(!this.player.isBombActive) this.player.bomb.x += this.player.vx;
-    }
-    if(this.isInBoundsY(this.player)){
-      this.player.y += this.player.vy;
-      if(!this.player.isBombActive) this.player.bomb.y += this.player.vy;
-    }
+    this.players.forEach(
+      player => {
+        if(this.isInBoundsX(player)){
+          player.x += player.vx;
+          if(!player.isBombActive) player.bomb.x += player.vx;
+        }
+        if(this.isInBoundsY(player)){
+          player.y += player.vy;
+          if(!player.isBombActive) player.bomb.y += player.vy;
+        }
+      });
 
     this.updateScore();
   }
 
-  removeAllBullets(){
-    this.bullets.forEach(
+  removeAllBullets(player){
+    this.bullets.filter(
+      bullet => bullet.playerId == player.id)
+      .forEach(
       bullet => this.removeObjectFromStage(bullet, this.bullets)
     );
   }
 
-  onPlayerDeath(){
-    this.updateHighscore();
-    this.setPlayerAlive(false, 0.2);
-    this.removeAllBullets();
-    setTimeout(()=>{this.setPlayerAlive(true, 1)}, 3000);
+  onPlayerDeath(player){
+    if(player.id == this.getPlayer().id) {
+      this.updateHighscore();
+    }
+    this.setPlayerAlive(player,false, 0.2);
+    this.removeAllBullets(player);
+    setTimeout(()=>{this.setPlayerAlive(player,true, 1)}, 3000);
   }
 
-  setPlayerAlive(isAlive, opacity) {
-    this.player.isAlive = isAlive;
-    this.player.opacity = opacity;
+  setPlayerAlive(player, isAlive, opacity) {
+    player.isAlive = isAlive;
+    player.opacity = opacity;
+    player.bomb.opacity = opacity;
   }
 
   updateHighscore(){
@@ -179,7 +207,6 @@ export class AstroidsEvolvedComponent implements OnInit {
       this.highscore = this.score;
     } else {
       if(this.score > this.highscore) {
-        console.log(this.score, this.highscore);
         this.highscore = this.score;
         this.highscoreText.text = "Highscore: " + this.score;
       }
@@ -238,96 +265,31 @@ export class AstroidsEvolvedComponent implements OnInit {
     return text;
   }
 
-  createPlayer(){
-    let player = new PIXI.Graphics();//PIXI.Sprite.fromImage('/assets/img/square.png');
-
-    //player.texture.baseTexture.on('loaded', ()=>{this.floor = this.app.screen.height - player.height/2});
-    player.opacity = 1;
-    player.lineStyle(1, 0x5BFF2D, player.opacity);
-    player.beginFill(0xFF700B, 0);
-    player.drawRect(-15, -15, 30, 30);
-
-
-    player.anchor = 0;
-    //player.scale.set(0.3);
-    player.x = this.app.screen.width / 2;
-    player.y = this.app.screen.height / 2;
-    player.ax = 0;
-    player.vx = 0;
-    player.ay = 0;
-    player.vy = 0;
-    player.isBombAvailable = true;
-    player.isBombActive = false;
-    player.isAlive = true;
-    player.interactive = true;
-    player.buttonMode = false;
-
-    //player.anchor.set(0.5);
-    // Pointers normalize touch and mouse
-
-
-// Alternatively, use the mouse & touch events:
-// sprite.on('click', onClick); // mouse-only
-// sprite.on('tap', onClick); // touch-only
-
-    this.app.stage.addChild(player);
-
-    this.app.stage.interactive = true;
-    this.player = player;
-    this.app.ticker.add(delta => this.gameLoop(delta));
-    this.createBomb();
-    let count = 0;
-    this.app.ticker.add(delta => {
-      count += 0.2;
-      player.clear();
-      const change = 0.5*(Math.sin(count) + 0.5);
-      if(player.isAlive){
-        player.lineStyle(3 + change*3, 0x5BFF2D, player.opacity - change);
-      } else {
-        player.lineStyle(3, 0x5BFF2D, player.opacity);
-      }
-      player.beginFill(0xFF700B, 0);
-      player.drawRect(-15, -15, 30, 30);
-    });
-  }
 
   onStageClick(event){
-    if(!this.player.isAlive) return;
-    this.shoot(this.player.rotation, {
-      x: this.player.x,
-      y: this.player.y
+    if(!this.getPlayer().isAlive) return;
+    this.shoot(this.getPlayer(), {
+      x: this.getPlayer().x,
+      y: this.getPlayer().y
     });
   }
 
 
-  private bullets = [];
+  private bullets: Array<any> = new Array();
   private bulletSpeed = 20;
 
-  createBullet(rotation, startPosition, lineStyle = 0){
-    const radius = 10;
-    const bullet = new PIXI.Graphics();
-    bullet.lineStyle(lineStyle);
-    bullet.beginFill(0xff0f22, 0.5);
-    bullet.drawCircle(0, 0, radius);
-    bullet.endFill();
-    bullet.x = startPosition.x;
-    bullet.y = startPosition.y;
-    bullet.vx = 0;
-    bullet.vy = 0;
-    bullet.radius = radius;
-    bullet.rotation = rotation - Math.PI/2;
-    bullet.count = 0;
-    return bullet;
-  }
-
-
-
-  shoot(rotation, startPosition){
+  shoot(player, startPosition){
     if(this.bullets.length > 5) return;
-    let bullet = this.createBullet(rotation, startPosition);
+    let bullet = this.createBullet(player, startPosition);
     this.app.stage.addChild(bullet);
     this.bullets.push(bullet);
   }
+
+  createBullet(player, position){
+    return Bullet.create(player, position, player.color , this.bulletSpeed)
+  }
+
+
 
   rotateToPoint(mx, my, px, py){
     const self = this;
@@ -360,7 +322,7 @@ export class AstroidsEvolvedComponent implements OnInit {
     asteroid.width = radius*2;
     asteroid.height = radius*2;
     asteroid.velocity = (Math.random() * this.asteroidVariation) + this.asteroidSpeed;
-    asteroid.rotation = Math.atan2( this.player.y - asteroid.y, this.player.x - asteroid.x) + (Math.random() * (Math.PI*2)/3) - (Math.PI*2)/3;
+    asteroid.rotation = Math.atan2( this.getPlayer().y - asteroid.y, this.getPlayer().x - asteroid.x) + (Math.random() * (Math.PI*2)/3) - (Math.PI*2)/3;
     asteroid.count = 0;
     return asteroid;
   }
@@ -391,11 +353,6 @@ export class AstroidsEvolvedComponent implements OnInit {
     }
   }
 
-
-  onClick(e?) {
-    console.log(e);
-  }
-
   isInBoundsX(object){
     return (this.app.screen.width > object.x + object.vx + object.width/2 && 0 < object.x + object.vx - object.width/2);
   }
@@ -410,7 +367,6 @@ export class AstroidsEvolvedComponent implements OnInit {
       object.height = radius*2;
     }
 
-
     if(this.isInBoundsX(object) && this.isInBoundsY(object)){
       return true;
     }
@@ -418,7 +374,6 @@ export class AstroidsEvolvedComponent implements OnInit {
     return false;
 
   }
-
 
   checkForCircleCollision(c1, c2){
     const dx = c1.x - c2.x,
@@ -448,98 +403,22 @@ export class AstroidsEvolvedComponent implements OnInit {
 
   }
 
-  createBomb(){
-    const bomb = new PIXI.Graphics();
-    bomb.radius = this.player.width/2;
-    bomb.lineStyle(2, 0xff0f22, 1);
-    bomb.beginFill(0xff0f22, 0);
-    bomb.drawCircle(0, 0, bomb.radius - 2);
-    bomb.endFill();
-    bomb.vx = 0;
-    bomb.vy = 0;
-    bomb.x = this.player.x;
-    bomb.y = this.player.y;
-    this.player.bomb = bomb;
-    this.app.stage.addChild(bomb);
-  }
-
-  redrawBomb(){
-    if(this.player.bomb.radius > 200) {
-      this.player.bomb.clear();
-      this.app.stage.removeChild(this.player.bomb);
-      this.player.isBombActive = false;
+  redrawBomb(player){
+    if(player.bomb.radius > 200) {
+      player.bomb.clear();
+      this.app.stage.removeChild(player.bomb);
+      player.isBombActive = false;
       setTimeout(()=>{
-        this.createBomb();
-        this.player.isBombAvailable = true;
+        player.createBomb();
+        player.isBombAvailable = true;
       }, 5000);
       return;
     }
-    this.player.bomb.radius += 3;
-    this.player.bomb.clear();
-    this.player.bomb.lineStyle(2, 0xff0f22, 1);
-    this.player.bomb.beginFill(0xff0f22, 0);
-    this.player.bomb.drawCircle(0, 0, this.player.bomb.radius);
-    this.player.bomb.endFill();
+    player.bomb.radius += 3;
+    player.bomb.clear();
+    player.bomb.lineStyle(2, 0xff0f22, 1);
+    player.bomb.beginFill(player.color, 0.1);
+    player.bomb.drawCircle(0, 0, player.bomb.radius);
+    player.bomb.endFill();
   }
-
-  initKeyboardListeners(){
-
-    this.left.press = () => {
-      //Change the cat's velocity when the key is pressed
-      this.player.vx = -this.movementVelocity;
-      this.player.ax = -this.acceleration;
-      //this.player.vy = 0;
-    };
-    this.left.release = () => {
-      if(this.right.isUp){
-        this.player.vx = 0;
-        this.player.ax = 0;
-      }
-    };
-
-    this.up.press = () => {
-      this.player.vy = -this.movementVelocity;
-      this.player.ay = -this.acceleration;
-    };
-    this.up.release = () => {
-      if(this.down.isUp){
-        this.player.vy = 0;
-        this.player.ay = 0;
-      }
-
-    };
-
-    this.right.press = () => {
-      this.player.vx = this.movementVelocity;
-      this.player.ax = this.acceleration;
-      //this.player.vy = 0;
-    };
-    this.right.release = () => {
-      if(this.left.isUp){
-        this.player.vx = 0;
-        this.player.ax = 0;
-      }
-    };
-
-    this.down.press = () => {
-      this.player.vy = this.movementVelocity;
-      this.player.ay = this.acceleration;
-    };
-    this.down.release = () => {
-      if(this.up.isUp){
-        this.player.vy = 0;
-        this.player.ay = 0;
-      }
-    };
-
-    this.space.press = () => {
-      if(!this.player.isBombAvailable || !this.player.isAlive) return;
-      this.player.isBombAvailable = false;
-      this.player.isBombActive = true;
-    }
-    ;
-    this.space.release = () => {
-    };
-  }
-
 }
